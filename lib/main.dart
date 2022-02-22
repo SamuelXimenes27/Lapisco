@@ -5,9 +5,7 @@ import 'package:http/http.dart' as http;
 
 import 'model.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -75,8 +73,11 @@ class _MyHomePageState extends State<MyHomePage> {
               final k = list[i];
               return Column(
                 children: [
-                  //CircleAvatar(radius: 50,backgroundImage: NetworkImage(k.picture?.thumbnail),),
-                  Text(k.name.first),
+                  CircleAvatar(radius: 50,backgroundImage: NetworkImage(k.picture!.thumbnail.toString()),),
+                  Text((k.name!.first.toString() + ' ' + k.name!.last.toString())),
+                  Text(k.gender! + "  -  " + k.dob!.age.toString()),
+                  Text(k.cell!),
+                  Text(k.email!)
                 ],
               );
             }),
