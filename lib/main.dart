@@ -5,10 +5,15 @@ import 'package:http/http.dart' as http;
 
 import 'model.dart';
 
-void main() => runApp(const MyApp());
+void main() => runApp(const MyApp(items: null,));
+
+String capitalize(String s) => s[0].toUpperCase() + s.substring(1);
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({Key? key, required this.items}) : super(key: key);
+
+  final List<Map>? items;
+
 
   @override
   Widget build(BuildContext context) {
@@ -27,16 +32,21 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MyHomePage> createState() => MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class MyHomePageState extends State<MyHomePage> {
   late Model model;
 
-  late List<Results> list;
+  late List<Results> list = [];
+
+  bool isSearching = false;
+
+  String? filter = "";
 
   Future getDataFromApi() async {
-    final url = await http.get(Uri.parse("https://randomuser.me/api/"));
+    final url =
+        await http.get(Uri.parse("https://randomuser.me/api/?results=5"));
     model = Model.fromJson(jsonDecode(url.body));
     setState(() {
       list = model.results!;
@@ -45,8 +55,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    // ignore: todo
-    // TODO: implement initState
     super.initState();
     getDataFromApi();
   }
@@ -55,32 +63,111 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xff292f45),
+        backgroundColor: const Color(0xff161D30),
         centerTitle: true,
-        title: Text(
-          widget.title,
-          style: const TextStyle(color: Color(0xff52fd9f)),
-        ),
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.search))],
+        title: !isSearching
+            ? Text(
+                widget.title,
+                style: const TextStyle(
+                  color: Color(0xff52fd9f),
+                ),
+              )
+            : const TextField(
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                    icon: Icon(
+                      Icons.search,
+                      color: Colors.white,
+                    ),
+                    hintStyle: TextStyle(color: Colors.white),
+                    hintText: "Search a person"),
+                    // onChanged: (teste) {
+                    //   setState(() {
+                    //       filter_Text = teste;
+                    //   });
+                    // },
+              ),
+        actions: [
+          isSearching
+              ? IconButton(
+                  onPressed: () {
+                    setState(() {
+                      isSearching = false;
+                    });
+                  },
+                  icon: const Icon(Icons.cancel))
+              : IconButton(
+                  onPressed: () {
+                    setState(() {
+                      isSearching = true;
+                    });
+                  },
+                  icon: const Icon(Icons.search))
+        ],
       ),
-      backgroundColor: const Color(0xff292f45),
-      // ignore: unnecessary_null_comparison
-      body: list == null
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : ListView.builder(itemCount: list.length, itemBuilder: (context, i) {
-              final k = list[i];
-              return Column(
-                children: [
-                  CircleAvatar(radius: 50,backgroundImage: NetworkImage(k.picture!.thumbnail.toString()),),
-                  Text((k.name!.first.toString() + ' ' + k.name!.last.toString())),
-                  Text(k.gender! + "  -  " + k.dob!.age.toString()),
-                  Text(k.cell!),
-                  Text(k.email!)
-                ],
-              );
-            }),
+      backgroundColor: const Color(0xff161D30),
+      body: FutureBuilder(
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          
+          List<Map> filteredList = [];
+
+          if(isSearching = false){
+            for(dynamic name in list){
+              String? nome = name['name'].toString().toLowerCase();
+              if(nome.contains(isSearching.toString())){
+                filteredList.add(name);
+              }
+              else{
+                filteredList.addAll(name);
+              }
+            }
+            }
+
+            return ListView.builder(
+              itemCount: list.length,
+              itemBuilder: (context, i) {
+                final k = list[i];
+                return ListTile(
+                  minVerticalPadding: 20,
+                  leading: Hero(
+                    tag: "imageProfile",
+                    child: CircleAvatar(
+                      radius: 30,
+                      backgroundImage:
+                          NetworkImage(k.picture!.thumbnail.toString()),
+                    ),
+                  ),
+                  title: Text(
+                    capitalize(k.name!.first.toString()) +
+                        " " +
+                        capitalize(k.name!.last.toString()),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xffe2e2e2),
+                    ),
+                  ),
+                  subtitle: RichText(
+                      text: TextSpan(
+                    style: const TextStyle(color: Color(0xffaaaaaa)),
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: k.gender! +
+                              "  -  " +
+                              k.dob!.age.toString() +
+                              " years" +
+                              '\n' +
+                              k.cell!),
+                      TextSpan(
+                          text: '\n' + k.email!,
+                          style: const TextStyle(color: Color(0xffde8e46))),
+                      TextSpan(text: '\n' + list.length.toString())
+                    ],
+                  )),
+                );
+              },
+            );
+          }
+      ),
     );
   }
 }
