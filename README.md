@@ -1,6 +1,3 @@
-# desafio_lapisco
-
-Desafio front-end para o Lapisco
 
 ## Getting Started
 
