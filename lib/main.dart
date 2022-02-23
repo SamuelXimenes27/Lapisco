@@ -1,28 +1,30 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
 import 'model.dart';
 
-void main() => runApp(const MyApp(items: null,));
+void main() => runApp(const MyApp(
+      items: null,
+    ));
 
-String capitalize(String s) => s[0].toUpperCase() + s.substring(1);
+// função para dar upper na primeira letra
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
+  }
+}
+
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key, required this.items}) : super(key: key);
 
   final List<Map>? items;
 
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Desafio Front-End - Lapisco',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Desafio Front-End - Lapisco'),
+      home: MyHomePage(title: 'Desafio Front-End - Lapisco'),
     );
   }
 }
@@ -42,11 +44,9 @@ class MyHomePageState extends State<MyHomePage> {
 
   bool isSearching = false;
 
-  String? filter = "";
-
   Future getDataFromApi() async {
-    final url =
-        await http.get(Uri.parse("https://randomuser.me/api/?results=5"));
+    //dependendo do valor do "results" pode nao gerar nada ate que de refresh algumas vezes 
+    final url = await http.get(Uri.parse("https://randomuser.me/api/?results=26")); //results controla o numero de cards que será gerado
     model = Model.fromJson(jsonDecode(url.body));
     setState(() {
       list = model.results!;
@@ -81,11 +81,6 @@ class MyHomePageState extends State<MyHomePage> {
                     ),
                     hintStyle: TextStyle(color: Colors.white),
                     hintText: "Search a person"),
-                    // onChanged: (teste) {
-                    //   setState(() {
-                    //       filter_Text = teste;
-                    //   });
-                    // },
               ),
         actions: [
           isSearching
@@ -106,41 +101,40 @@ class MyHomePageState extends State<MyHomePage> {
         ],
       ),
       backgroundColor: const Color(0xff161D30),
-      body: FutureBuilder(
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          
-          List<Map> filteredList = [];
+      body: FutureBuilder(builder: (BuildContext context, AsyncSnapshot) {
+        List<Map> filteredList = [];
 
-          if(isSearching = false){
-            for(dynamic name in list){
-              String? nome = name['name'].toString().toLowerCase();
-              if(nome.contains(isSearching.toString())){
-                filteredList.add(name);
-              }
-              else{
-                filteredList.addAll(name);
-              }
+        // função para fazer a busca/filtro
+        if (isSearching = false) {
+          for (dynamic name in list) {
+            String? nome = name['name'].toString().toLowerCase();
+            if (nome.contains(isSearching.toString())) {
+              filteredList.add(name);
+            } else {
+              filteredList.addAll(name);
             }
-            }
+          }
+        }
 
-            return ListView.builder(
-              itemCount: list.length,
-              itemBuilder: (context, i) {
-                final k = list[i];
-                return ListTile(
-                  minVerticalPadding: 20,
-                  leading: Hero(
-                    tag: "imageProfile",
-                    child: CircleAvatar(
-                      radius: 30,
-                      backgroundImage:
-                          NetworkImage(k.picture!.thumbnail.toString()),
-                    ),
+        return ListView.builder(
+            itemCount: list.length,
+            itemBuilder: (context, i) {
+              final k = list[i]; //valores da API
+              return Card(
+                margin:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                color: const Color(0xff292f45),
+                child: ListTile(
+                  minVerticalPadding: 10,
+                  leading: CircleAvatar(
+                    radius: 30,
+                    backgroundImage:
+                        NetworkImage(k.picture!.thumbnail.toString()),
                   ),
                   title: Text(
-                    capitalize(k.name!.first.toString()) +
+                    (k.name!.first.toString()) +
                         " " +
-                        capitalize(k.name!.last.toString()),
+                        (k.name!.last.toString()),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Color(0xffe2e2e2),
@@ -151,8 +145,8 @@ class MyHomePageState extends State<MyHomePage> {
                     style: const TextStyle(color: Color(0xffaaaaaa)),
                     children: <TextSpan>[
                       TextSpan(
-                          text: k.gender! +
-                              "  -  " +
+                          text: k.gender!.capitalize() +
+                              " - " +
                               k.dob!.age.toString() +
                               " years" +
                               '\n' +
@@ -160,14 +154,12 @@ class MyHomePageState extends State<MyHomePage> {
                       TextSpan(
                           text: '\n' + k.email!,
                           style: const TextStyle(color: Color(0xffde8e46))),
-                      TextSpan(text: '\n' + list.length.toString())
                     ],
                   )),
-                );
-              },
-            );
-          }
-      ),
+                ),
+              );
+            });
+      }),
     );
   }
 }
