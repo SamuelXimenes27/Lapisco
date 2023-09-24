@@ -15,5 +15,6 @@ class AppBloc {
     final url =
         await http.get(Uri.parse("https://randomuser.me/api/?results=26"));
     model = Model.fromJson(jsonDecode(url.body));
+    return model.results;
   }
 }
