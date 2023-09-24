@@ -43,7 +43,15 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: buildAppBar(),
       backgroundColor: const Color(0xff161D30),
-      body: buildBody(),
+      body: RefreshIndicator(
+        child: buildBody(),
+        onRefresh: () async {
+          await bloc.getDataFromApi();
+          setState(() {
+            bloc.list = bloc.model.results!;
+          });
+        },
+      ),
     );
   }
 
